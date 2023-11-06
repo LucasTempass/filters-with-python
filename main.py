@@ -1,9 +1,7 @@
 import PySimpleGUI as gui
 import cv2
 
-from filtros import Filtro, filtros
-
-
+from filtros import filtros
 
 nome_filtros = [filtro.nome for filtro in filtros]
 
@@ -33,8 +31,6 @@ while True:
     if event == gui.WIN_CLOSED:
         break
 
-    image = None
-
     if event == 'file':
         image_path = values['file']
         if image_path:
@@ -42,20 +38,18 @@ while True:
             imageBytes = cv2.imencode('.png', image)[1].tobytes()
             window['image'].update(data=imageBytes)
 
-    if image:
+    if image_path:
         if event in nome_filtros:
             for filtro in filtros:
                 if event == filtro.nome:
                     # aplicar filtro
-                    bytes = cv2.imencode('.png', filtro.apply(cv2.imread(image_path)))[1].tobytes()
-                    window['image'].update(data=bytes)
-
+                    bytes_imagem = cv2.imencode('.png', filtro.apply(cv2.imread(image_path)))[1].tobytes()
+                    window['image'].update(data=bytes_imagem)
         if event == 'Save':
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
             if filename:
-                if event == 'Grayscale':
-                    cv2.imwrite(filename, apply_grayscale(cv2.imread(image_path)))
-                elif event == 'Sepia':
-                    cv2.imwrite(filename, apply_sepia(cv2.imread(image_path)))
-
+                if event in nome_filtros:
+                    for filtro in filtros:
+                        if event == filtro.nome:
+                            cv2.imwrite(filename, filtro.apply(cv2.imread(image_path)))
 window.close()
