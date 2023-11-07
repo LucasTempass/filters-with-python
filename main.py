@@ -1,10 +1,11 @@
 import PySimpleGUI as gui
 import cv2
 
-from filtros import filtros
-
+from filtro import filtros
+from sticker import Sticker
 nome_filtros = [filtro.nome for filtro in filtros]
-
+sticker1 = Sticker('sticker1.png')
+sticker2 = Sticker('sticker2.png')
 layout = [
     # input
     [gui.Input(key='file', enable_events=True), gui.FileBrowse()],
@@ -24,6 +25,7 @@ layout = [
 window = gui.Window('Instagram Filters App', layout, finalize=True)
 
 image_path = None
+selected_sticker = None
 
 while True:
     event, values = window.read()
@@ -47,9 +49,18 @@ while True:
                     window['image'].update(data=bytes_imagem)
         if event == 'Save':
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
+            print(filename)
             if filename:
-                if event in nome_filtros:
-                    for filtro in filtros:
-                        if event == filtro.nome:
-                            cv2.imwrite(filename, filtro.apply(cv2.imread(image_path)))
+                cv2.imwrite(filename, filtro.apply(cv2.imread(image_path)))
+        if event.startswith('Sticker'):
+            if event == 'Sticker 1':
+                selected_sticker = sticker1
+            elif event == 'Sticker 2':
+                selected_sticker = sticker2
+            x, y = values['Canvas']
+            image_with_sticker = selected_sticker.apply(cv2.imread(image_path), x, y)
+            bytes_imagem = cv2.imencode('.png', image_with_sticker)[1].tobytes()
+            window['image'].update(data=bytes_imagem)
+
+                            
 window.close()
