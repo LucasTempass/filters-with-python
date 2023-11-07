@@ -3,9 +3,12 @@ import cv2
 
 from filtro import filtros
 from sticker import Sticker
+
 nome_filtros = [filtro.nome for filtro in filtros]
+
 sticker1 = Sticker('sticker1.png')
 sticker2 = Sticker('sticker2.png')
+
 layout = [
     # input
     [gui.Input(key='file', enable_events=True), gui.FileBrowse()],
@@ -16,6 +19,8 @@ layout = [
     [gui.Text('Stickers')],
     # TODO adicionar stickers
     [gui.Button('Sticker 1'), gui.Button('Sticker 2')],
+    # filtros aplicado
+    [gui.Text('Nenhum filtro aplicado', key='filtro_aplicado', visible=False)],
     # imagem
     [gui.Image(key='image', size=(400, 400))],
     # ações
@@ -26,6 +31,7 @@ window = gui.Window('Instagram Filters App', layout, finalize=True)
 
 image_path = None
 selected_sticker = None
+filtro_aplicado = None
 
 while True:
     event, values = window.read()
@@ -43,15 +49,17 @@ while True:
     if image_path:
         if event in nome_filtros:
             for filtro in filtros:
-                if event == filtro.nome:
-                    # aplicar filtro
-                    bytes_imagem = cv2.imencode('.png', filtro.apply(cv2.imread(image_path)))[1].tobytes()
-                    window['image'].update(data=bytes_imagem)
+                if event != filtro.nome:
+                    continue
+                window['filtro_aplicado'].update(visible=True)
+                window['filtro_aplicado'].update('Filtro aplicado: ' + filtro.nome)
+                img_bytes = cv2.imencode('.png', filtro.apply(cv2.imread(image_path)))[1].tobytes()
+                window['image'].update(data=img_bytes)
+                filtro_aplicado = filtro
         if event == 'Save':
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
-            print(filename)
             if filename:
-                cv2.imwrite(filename, filtro.apply(cv2.imread(image_path)))
+                cv2.imwrite(filename, filtro_aplicado.apply(cv2.imread(image_path)))
         if event.startswith('Sticker'):
             if event == 'Sticker 1':
                 selected_sticker = sticker1
@@ -62,5 +70,4 @@ while True:
             bytes_imagem = cv2.imencode('.png', image_with_sticker)[1].tobytes()
             window['image'].update(data=bytes_imagem)
 
-                            
 window.close()
