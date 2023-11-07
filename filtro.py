@@ -27,9 +27,18 @@ def apply_sepia(image):
     return cv2.filter2D(image, -1, kernel)
 
 
+def apply_blur(image):
+    return cv2.blur(image, (5, 5))
+
+
+def apply_invert(image):
+    return cv2.bitwise_not(image)
+
+
 filtroGrayscale = Filtro('Grayscale', apply_grayscale)
 filtroSepia = Filtro('Sepia', apply_sepia)
+filtroBlur = Filtro('Blur', apply_blur)
+filtroInvert = Filtro('Invert', apply_invert)
 
-# TODO adicionar filtros
 # lista de filtros disponíveis
-filtros = [filtroSepia, filtroGrayscale]
+filtros = [filtroSepia, filtroGrayscale, filtroBlur, filtroInvert]
