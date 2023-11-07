@@ -24,7 +24,7 @@ layout = [
     # imagem
     [gui.Image(key='image', size=(400, 400))],
     # ações
-    [gui.Button('Save')],
+    [gui.Button('Save', disabled=True)],
 ]
 
 window = gui.Window('Instagram Filters App', layout, finalize=True)
@@ -45,6 +45,7 @@ while True:
             image = cv2.imread(image_path)
             imageBytes = cv2.imencode('.png', image)[1].tobytes()
             window['image'].update(data=imageBytes)
+            window['Save'].update(disabled=False)
 
     if image_path:
         if event in nome_filtros:
