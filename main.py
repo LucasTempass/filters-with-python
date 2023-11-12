@@ -1,7 +1,7 @@
 import PySimpleGUI as gui
 import cv2
 
-from filtro import filtros
+from filtros import filtros
 from sticker import Sticker
 
 nome_filtros = [filtro.nome for filtro in filtros]
