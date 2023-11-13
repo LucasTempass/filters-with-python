@@ -4,6 +4,8 @@ import cv2
 from filtros import filtros
 from sticker import Sticker
 
+CANVAS_SIZE = 400
+
 nome_filtros = [filtro.nome for filtro in filtros]
 
 sticker1 = Sticker('sticker1.png')
@@ -33,6 +35,15 @@ image_path = None
 selected_sticker = None
 filtro_aplicado = None
 
+
+def set_image(image):
+    ratio = image.shape[0] / image.shape[1]
+    # keep original image ratio
+    image = cv2.resize(image, (int(CANVAS_SIZE / ratio), CANVAS_SIZE))
+    img_bytes = cv2.imencode('.png', image)[1].tobytes()
+    window['image'].update(data=img_bytes)
+
+
 while True:
     event, values = window.read()
 
@@ -42,9 +53,7 @@ while True:
     if event == 'file':
         image_path = values['file']
         if image_path:
-            image = cv2.imread(image_path)
-            imageBytes = cv2.imencode('.png', image)[1].tobytes()
-            window['image'].update(data=imageBytes)
+            set_image(cv2.imread(image_path))
             window['Save'].update(disabled=False)
 
     if image_path:
@@ -54,8 +63,7 @@ while True:
                     continue
                 window['filtro_aplicado'].update(visible=True)
                 window['filtro_aplicado'].update('Filtro aplicado: ' + filtro.nome)
-                img_bytes = cv2.imencode('.png', filtro.apply(cv2.imread(image_path)))[1].tobytes()
-                window['image'].update(data=img_bytes)
+                set_image(filtro.apply(cv2.imread(image_path)))
                 filtro_aplicado = filtro
         if event == 'Save':
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
