@@ -62,10 +62,7 @@ while True:
 
     if event == 'image':
         x, y = values[event]
-        location = (x - 28, y + 28)  # figure size is (56, 56)
-        # Using option `filename` if the image source is a file
-        sticker = gui.EMOJI_BASE64_HAPPY_BIG_SMILE
-        window['image'].draw_image(data=sticker, location=location)
+        print(x, y)
 
     if image_path:
         if event in nome_filtros:
