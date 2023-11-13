@@ -24,7 +24,7 @@ layout = [
     # filtros aplicado
     [gui.Text('Nenhum filtro aplicado', key='filtro_aplicado', visible=False)],
     # imagem
-    [gui.Image(key='image', size=(400, 400))],
+    [gui.Graph((CANVAS_SIZE, CANVAS_SIZE), (0, 0), (CANVAS_SIZE, CANVAS_SIZE), enable_events=True, key='image')],
     # ações
     [gui.Button('Save', disabled=True)],
 ]
@@ -39,9 +39,13 @@ filtro_aplicado = None
 def set_image(image):
     ratio = image.shape[0] / image.shape[1]
     # keep original image ratio
-    image = cv2.resize(image, (int(CANVAS_SIZE / ratio), CANVAS_SIZE))
+    width = int(CANVAS_SIZE / ratio)
+    height = CANVAS_SIZE
+    # alters the size of the Graph element
+    window['image'].Widget.config(width=width, height=height)
+    image = cv2.resize(image, (width, height))
     img_bytes = cv2.imencode('.png', image)[1].tobytes()
-    window['image'].update(data=img_bytes)
+    window['image'].draw_image(data=img_bytes, location=(0, CANVAS_SIZE))
 
 
 while True:
@@ -56,6 +60,13 @@ while True:
             set_image(cv2.imread(image_path))
             window['Save'].update(disabled=False)
 
+    if event == 'image':
+        x, y = values[event]
+        location = (x - 28, y + 28)  # figure size is (56, 56)
+        # Using option `filename` if the image source is a file
+        sticker = gui.EMOJI_BASE64_HAPPY_BIG_SMILE
+        window['image'].draw_image(data=sticker, location=location)
+
     if image_path:
         if event in nome_filtros:
             for filtro in filtros:
@@ -65,6 +76,7 @@ while True:
                 window['filtro_aplicado'].update('Filtro aplicado: ' + filtro.nome)
                 set_image(filtro.apply(cv2.imread(image_path)))
                 filtro_aplicado = filtro
+
         if event == 'Save':
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
             if filename:
