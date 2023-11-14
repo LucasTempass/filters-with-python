@@ -4,7 +4,7 @@ import cv2
 from filtros import filtros
 from sticker import Sticker
 
-CANVAS_SIZE = 400
+CANVAS_SIZE = 600
 
 nome_filtros = [filtro.nome for filtro in filtros]
 
@@ -35,17 +35,28 @@ image_path = None
 selected_sticker = None
 filtro_aplicado = None
 
+# inicializa o canvas com valores padrão
+canvas_width = CANVAS_SIZE
+canvas_height = CANVAS_SIZE
+# imagem que será desenhada no canvas e salva
+canvas_image = None
+
 
 def set_image(image):
+    global canvas_image
+    global canvas_width
+    global canvas_height
+    graph_element = window['image']
+    # aplica proporção da imagem no canvas
     ratio = image.shape[0] / image.shape[1]
-    # keep original image ratio
-    width = int(CANVAS_SIZE / ratio)
-    height = CANVAS_SIZE
-    # alters the size of the Graph element
-    window['image'].Widget.config(width=width, height=height)
-    image = cv2.resize(image, (width, height))
-    img_bytes = cv2.imencode('.png', image)[1].tobytes()
-    window['image'].draw_image(data=img_bytes, location=(0, CANVAS_SIZE))
+    canvas_width = int(CANVAS_SIZE / ratio)
+    canvas_height = CANVAS_SIZE
+    # altera o tamanho do canvas
+    graph_element.Widget.config(width=canvas_width, height=canvas_height)
+    # altera o tamanho da imagem para o tamanho do canvas
+    canvas_image = cv2.resize(image, (canvas_width, canvas_height))
+    bytes = cv2.imencode('.png', canvas_image)[1].tobytes()
+    graph_element.draw_image(data=bytes, location=(0, CANVAS_SIZE))
 
 
 while True:
@@ -62,7 +73,9 @@ while True:
 
     if event == 'image':
         x, y = values[event]
-        print(x, y)
+        sticker = Sticker('sticker1.png')
+        image_with_sticker = sticker.apply(canvas_image, x, y)
+        set_image(image_with_sticker)
 
     if image_path:
         if event in nome_filtros:
@@ -71,13 +84,12 @@ while True:
                     continue
                 window['filtro_aplicado'].update(visible=True)
                 window['filtro_aplicado'].update('Filtro aplicado: ' + filtro.nome)
-                set_image(filtro.apply(cv2.imread(image_path)))
+                set_image(filtro.apply(canvas_image))
                 filtro_aplicado = filtro
-
         if event == 'Save':
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
             if filename:
-                cv2.imwrite(filename, filtro_aplicado.apply(cv2.imread(image_path)))
+                cv2.imwrite(filename, canvas_image)
         if event.startswith('Sticker'):
             if event == 'Sticker 1':
                 selected_sticker = sticker1
