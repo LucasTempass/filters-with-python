@@ -1,6 +1,8 @@
 import PySimpleGUI as gui
 import cv2
-
+import numpy as np
+from PIL import Image
+from io import BytesIO
 from filtros import filtros
 from sticker import Sticker
 
@@ -12,20 +14,14 @@ sticker1 = Sticker('sticker1.png')
 sticker2 = Sticker('sticker2.png')
 
 layout = [
-    # input
     [gui.Input(key='file', enable_events=True), gui.FileBrowse()],
-    # filtros
     [gui.Text('Filtros')],
     [gui.Button(filtro.nome) for filtro in filtros],
-    # stickers
     [gui.Text('Stickers')],
-    # TODO adicionar stickers
     [gui.Button('Sticker 1'), gui.Button('Sticker 2')],
-    # filtros aplicado
     [gui.Text('Nenhum filtro aplicado', key='filtro_aplicado', visible=False)],
-    # imagem
     [gui.Graph((CANVAS_SIZE, CANVAS_SIZE), (0, 0), (CANVAS_SIZE, CANVAS_SIZE), enable_events=True, key='image')],
-    # ações
+    [gui.Button('Take Photo')], 
     [gui.Button('Save', disabled=True)],
 ]
 
@@ -34,12 +30,12 @@ window = gui.Window('Instagram Filters App', layout, finalize=True)
 image_path = None
 selected_sticker = None
 filtro_aplicado = None
-
-# inicializa o canvas com valores padrão
 canvas_width = CANVAS_SIZE
 canvas_height = CANVAS_SIZE
-# imagem que será desenhada no canvas e salva
 canvas_image = None
+
+# Captura de vídeo
+
 
 
 def set_image(image):
@@ -47,17 +43,13 @@ def set_image(image):
     global canvas_width
     global canvas_height
     graph_element = window['image']
-    # aplica proporção da imagem no canvas
     ratio = image.shape[0] / image.shape[1]
     canvas_width = int(CANVAS_SIZE / ratio)
     canvas_height = CANVAS_SIZE
-    # altera o tamanho do canvas
     graph_element.Widget.config(width=canvas_width, height=canvas_height)
-    # altera o tamanho da imagem para o tamanho do canvas
     canvas_image = cv2.resize(image, (canvas_width, canvas_height))
     bytes = cv2.imencode('.png', canvas_image)[1].tobytes()
     graph_element.draw_image(data=bytes, location=(0, CANVAS_SIZE))
-
 
 while True:
     event, values = window.read()
@@ -70,6 +62,32 @@ while True:
         if image_path:
             set_image(cv2.imread(image_path))
             window['Save'].update(disabled=False)
+
+    if event == 'Take Photo':
+        cap = cv2.VideoCapture(1)
+        ret, frame = cap.read()
+        if ret:
+            # Aplica stickers e filtros ao frame
+            x, y = values['image']  # Use a chave correta para obter as coordenadas do canvas
+            sticker = Sticker('sticker1.png')  # Substitua pelo seu sticker real
+            image_with_sticker = sticker.apply(frame, x, y)
+
+            if filtro_aplicado:
+                image_with_filter = filtro_aplicado.apply(image_with_sticker)
+            else:
+                image_with_filter = image_with_sticker
+
+            # Exibe a imagem no canvas
+            set_image(image_with_filter)
+
+            # Salva a imagem modificada
+            filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
+            if filename:
+                cv2.imwrite(filename, image_with_filter)
+            window['Save'].update(disabled=False)
+
+        cv2.destroyAllWindows()
+
 
     if event == 'image':
         x, y = values[event]
@@ -101,3 +119,4 @@ while True:
             window['image'].update(data=bytes_imagem)
 
 window.close()
+cap.release()
