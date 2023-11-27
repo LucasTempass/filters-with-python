@@ -30,10 +30,13 @@ selected_sticker = None
 filtro_aplicado = None
 canvas_width = CANVAS_SIZE
 canvas_height = CANVAS_SIZE
-canvas_image = None
+final_image = None
+stickers_image = None
+original_image = None
 
-def set_image(image):
-    global canvas_image
+
+def update_canvas(image):
+    global final_image
     global canvas_width
     global canvas_height
 
@@ -49,10 +52,10 @@ def set_image(image):
     graph_element.Widget.config(width=canvas_width, height=canvas_height)
 
     # Redimensione a imagem para se ajustar às dimensões do canvas
-    canvas_image = cv2.resize(image, (canvas_width, canvas_height))
+    final_image = cv2.resize(image, (canvas_width, canvas_height))
 
     # Converta a imagem para bytes para exibição na GUI
-    bytes = cv2.imencode('.png', canvas_image)[1].tobytes()
+    bytes = cv2.imencode('.png', final_image)[1].tobytes()
 
     graph_element.draw_image(data=bytes, location=(0, CANVAS_SIZE))
 
@@ -66,7 +69,10 @@ while True:
     if event == 'file':
         image_path = values['file']
         if image_path:
-            set_image(cv2.imread(image_path))
+            # Armazena a imagem original
+            original_image = cv2.imread(image_path)
+            stickers_image = original_image.copy()
+            update_canvas(original_image)
             window['Save'].update(disabled=False)
 
     if event == 'Take Photo':
@@ -84,7 +90,7 @@ while True:
                 image_with_filter = image_with_sticker
 
             # Exibe a imagem no canvas
-            set_image(image_with_filter)
+            update_canvas(image_with_filter)
 
             # Salva a imagem modificada
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
@@ -94,34 +100,37 @@ while True:
 
         cv2.destroyAllWindows()
 
-    if event == 'image':
-        x, y = values[event]
-        sticker = Sticker('sticker1.png')
-        image_with_sticker = sticker.apply(canvas_image, x, y)
-        set_image(image_with_sticker)
 
     if image_path:
         if event in nome_filtros:
             for filtro in filtros:
                 if event != filtro.nome:
                     continue
-                window['filtro_aplicado'].update(visible=True)
-                window['filtro_aplicado'].update('Filtro aplicado: ' + filtro.nome)
-                set_image(filtro.apply(canvas_image))
+
                 filtro_aplicado = filtro
+                window['filtro_aplicado'].update('Filtro aplicado: ' + filtro_aplicado.nome)
+                window['filtro_aplicado'].update(visible=True)
+
+                # Para evitar de aplicar o filtro várias vezes, aplica apenas sobre a imagem original com os stickers
+                update_canvas(filtro.apply(stickers_image))
+
         if event == 'Save':
             filename = gui.popup_get_file('Save as', save_as=True, file_types=(('PNG Files', '*.png'),))
             if filename:
-                cv2.imwrite(filename, canvas_image)
+                cv2.imwrite(filename, final_image)
+
         if event.startswith('Sticker'):
+            # TODO get coordinates to apply sticker
             if event == 'Sticker 1':
                 selected_sticker = sticker1
             elif event == 'Sticker 2':
                 selected_sticker = sticker2
-            x, y = values['Canvas']
-            image_with_sticker = selected_sticker.apply(cv2.imread(image_path), x, y)
-            bytes_imagem = cv2.imencode('.png', image_with_sticker)[1].tobytes()
-            window['image'].update(data=bytes_imagem)
+            stickers_image = selected_sticker.apply(stickers_image, 0, 0)
+
+            if filtro_aplicado:
+                update_canvas(filtro_aplicado.apply(stickers_image))
+            else:
+                update_canvas(stickers_image)
 
 window.close()
 cap.release()
