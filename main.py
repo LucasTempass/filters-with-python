@@ -100,6 +100,18 @@ while True:
 
         cv2.destroyAllWindows()
 
+    if event == 'image':
+        x, y = values['image']
+
+        if not selected_sticker:
+            continue
+
+        stickers_image = selected_sticker.apply(stickers_image, x, y)
+
+        if filtro_aplicado:
+            update_canvas(filtro_aplicado.apply(stickers_image))
+        else:
+            update_canvas(stickers_image)
 
     if image_path:
         if event in nome_filtros:
@@ -120,17 +132,9 @@ while True:
                 cv2.imwrite(filename, final_image)
 
         if event.startswith('Sticker'):
-            # TODO get coordinates to apply sticker
             if event == 'Sticker 1':
                 selected_sticker = sticker1
             elif event == 'Sticker 2':
                 selected_sticker = sticker2
-            stickers_image = selected_sticker.apply(stickers_image, 0, 0)
-
-            if filtro_aplicado:
-                update_canvas(filtro_aplicado.apply(stickers_image))
-            else:
-                update_canvas(stickers_image)
 
 window.close()
-cap.release()
