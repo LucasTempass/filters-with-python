@@ -16,14 +16,13 @@ layout = [
     [gui.Text('Filtros')],
     [gui.Button(filtro.nome) for filtro in filtros],
     [gui.Text('Stickers')],
-    [gui.Button('Sticker 1'), gui.Button('Sticker 2')],
-    [gui.Text('Nenhum filtro aplicado', key='filtro_aplicado', visible=False)],
+    [gui.Button('Rainbow'), gui.Button('Pizza')],
     [gui.Graph((CANVAS_SIZE, CANVAS_SIZE), (0, 0), (CANVAS_SIZE, CANVAS_SIZE), enable_events=True, key='image')],
     [gui.Button('Tirar foto')],
     [gui.Button('Salvar', disabled=True)],
 ]
 
-window = gui.Window('Instagram Filters App', layout, finalize=True)
+window = gui.Window('Instagram Filters App', layout, finalize=True, resizable=True)
 
 selected_sticker = None
 filtro_aplicado = None
@@ -114,8 +113,6 @@ while True:
                     continue
 
                 filtro_aplicado = filtro
-                window['filtro_aplicado'].update('Filtro aplicado: ' + filtro_aplicado.nome)
-                window['filtro_aplicado'].update(visible=True)
 
                 # Para evitar de aplicar o filtro várias vezes, aplica apenas sobre a imagem original com os stickers
                 update_canvas(filtro.apply(stickers_image))
@@ -125,10 +122,9 @@ while True:
             if filename:
                 cv2.imwrite(filename, final_image)
 
-        if event.startswith('Sticker'):
-            if event == 'Sticker 1':
-                selected_sticker = sticker1
-            elif event == 'Sticker 2':
-                selected_sticker = sticker2
+        if event == 'Rainbow':
+            selected_sticker = sticker1
+        if event == 'Pizza':
+            selected_sticker = sticker2
 
 window.close()
