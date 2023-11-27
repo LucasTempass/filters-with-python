@@ -1,8 +1,6 @@
 import PySimpleGUI as gui
 import cv2
-import numpy as np
-from PIL import Image
-from io import BytesIO
+
 from filtros import filtros
 from sticker import Sticker
 
@@ -21,7 +19,7 @@ layout = [
     [gui.Button('Sticker 1'), gui.Button('Sticker 2')],
     [gui.Text('Nenhum filtro aplicado', key='filtro_aplicado', visible=False)],
     [gui.Graph((CANVAS_SIZE, CANVAS_SIZE), (0, 0), (CANVAS_SIZE, CANVAS_SIZE), enable_events=True, key='image')],
-    [gui.Button('Take Photo')], 
+    [gui.Button('Take Photo')],
     [gui.Button('Save', disabled=True)],
 ]
 
@@ -34,22 +32,30 @@ canvas_width = CANVAS_SIZE
 canvas_height = CANVAS_SIZE
 canvas_image = None
 
-# Captura de vídeo
-
-
-
 def set_image(image):
     global canvas_image
     global canvas_width
     global canvas_height
+
     graph_element = window['image']
+
+    # Calcule a proporção da altura da imagem para a sua largura
     ratio = image.shape[0] / image.shape[1]
+
     canvas_width = int(CANVAS_SIZE / ratio)
     canvas_height = CANVAS_SIZE
+
+    # Configure a largura e a altura do widget para corresponder às dimensões do canvas
     graph_element.Widget.config(width=canvas_width, height=canvas_height)
+
+    # Redimensione a imagem para se ajustar às dimensões do canvas
     canvas_image = cv2.resize(image, (canvas_width, canvas_height))
+
+    # Converta a imagem para bytes para exibição na GUI
     bytes = cv2.imencode('.png', canvas_image)[1].tobytes()
+
     graph_element.draw_image(data=bytes, location=(0, CANVAS_SIZE))
+
 
 while True:
     event, values = window.read()
@@ -87,7 +93,6 @@ while True:
             window['Save'].update(disabled=False)
 
         cv2.destroyAllWindows()
-
 
     if event == 'image':
         x, y = values[event]
