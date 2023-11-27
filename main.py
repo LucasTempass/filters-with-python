@@ -11,6 +11,8 @@ nome_filtros = [filtro.nome for filtro in filtros]
 sticker1 = Sticker('sticker1.png')
 sticker2 = Sticker('sticker2.png')
 
+gui.theme('Material1')
+
 layout = [
     [gui.Input(key='file', enable_events=True), gui.FileBrowse()],
     [gui.Text('Filtros')],
