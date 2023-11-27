@@ -12,10 +12,6 @@ class Sticker:
             print("Erro: A imagem é None.")
             return image
 
-        if not isinstance(x, (int, np.int64)) or not isinstance(y, (int, np.int64)):
-            print("Erro: As coordenadas x e y devem ser números inteiros.")
-            return image
-
         image_with_sticker = image.copy()
 
         sticker_height, sticker_width, _ = self.sticker.shape

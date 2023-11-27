@@ -102,6 +102,8 @@ while True:
 
     if event == 'image':
         x, y = values['image']
+        # Inverte a coordenada y para que a origem seja no canto superior esquerdo
+        y = canvas_height - y
 
         if not selected_sticker:
             continue
